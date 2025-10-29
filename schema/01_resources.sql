@@ -4,7 +4,7 @@
 CREATE TABLE resources (
     -- Primary identification
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id                 BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id                 TEXT NOT NULL,              -- Twitter user ID (string)
     
     -- Source message tracking (for deduplication)
     source_platform         TEXT NOT NULL DEFAULT 'twitter',  -- twitter, telegram, etc.
@@ -37,7 +37,7 @@ CREATE TABLE resources (
     -- Pricing and monetization
     price_usd_cents         INTEGER NOT NULL CHECK (price_usd_cents >= 0), -- Price in cents (e.g., 20 = $0.20)
     currency                TEXT NOT NULL DEFAULT 'USDC', -- USDC, USDT, etc.
-    chain                   TEXT NOT NULL DEFAULT 'base',  -- base, ethereum, solana
+    chain                   TEXT NOT NULL DEFAULT 'solana',  -- base, ethereum, solana
     
     -- Purchase statistics
     total_purchases         INTEGER NOT NULL DEFAULT 0,
@@ -57,7 +57,7 @@ CREATE TABLE resources (
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     -- Constraints
-    CONSTRAINT valid_status CHECK (status IN ('draft', 'published', 'locked', 'suspended', 'deleted')),
+    CONSTRAINT valid_status CHECK (status IN ('draft', 'published', 'suspended', 'deleted')),
     CONSTRAINT tweet_required_when_published CHECK (
         (status = 'published' AND tweet_id IS NOT NULL) OR 
         (status != 'published')
@@ -71,6 +71,15 @@ CREATE INDEX idx_resources_tweet_id ON resources(tweet_id) WHERE tweet_id IS NOT
 CREATE INDEX idx_resources_proof_hash ON resources(proof_hash);
 CREATE INDEX idx_resources_created_at ON resources(created_at DESC);
 CREATE UNIQUE INDEX idx_resources_source_message_id ON resources(source_platform, source_message_id);
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Trigger to update updated_at
 CREATE TRIGGER update_resources_updated_at BEFORE UPDATE ON resources

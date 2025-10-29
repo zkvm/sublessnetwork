@@ -28,28 +28,23 @@ export const db = {
   async getResource(resourceId: string) {
     const result = await pool.query(
       `SELECT 
-        r.id,
-        r.user_id,
-        r.content_ciphertext,
-        r.content_iv,
-        r.content_type,
-        r.content_hash,
-        r.price_usd_cents,
-        r.currency,
-        r.chain,
-        r.status,
-        r.watermark_enabled,
-        r.watermark_seed,
-        r.tweet_id,
-        u.twitter_user_id,
-        u.twitter_username,
-        w.public_address as creator_wallet_address
-      FROM resources r
-      JOIN users u ON r.user_id = u.id
-      LEFT JOIN wallets w ON r.user_id = w.user_id
-      WHERE r.id = $1 
-        AND r.status = 'published'
-        AND r.deleted_at IS NULL`,
+        id,
+        user_id,
+        content_ciphertext,
+        content_iv,
+        content_type,
+        content_hash,
+        price_usd_cents,
+        currency,
+        chain,
+        status,
+        watermark_enabled,
+        watermark_seed,
+        tweet_id
+      FROM resources
+      WHERE id = $1 
+        AND status = 'published'
+        AND deleted_at IS NULL`,
       [resourceId]
     );
 
