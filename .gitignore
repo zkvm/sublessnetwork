@@ -40,3 +40,4 @@ temp/
 # Documentation (work in progress)
 *.md
 !LICENSE.md
+!README-core.md
