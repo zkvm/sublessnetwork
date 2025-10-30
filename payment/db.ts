@@ -1,4 +1,5 @@
 import pg from 'pg';
+import crypto from 'crypto';
 import { config } from './config.js';
 
 const { Pool } = pg;
@@ -86,7 +87,7 @@ export const db = {
         data.pricePaidCents,
         data.currency,
         data.chain,
-        data.txHash || 'pending_verification', // 假的默认值，等待从 facilitator 获取实际 tx hash
+        data.txHash || `pending_${crypto.randomBytes(16).toString('hex')}`, // 生成唯一的临时 tx hash
         data.txFromAddress || 'unknown', // 假的默认值，需要从 payment header 解析
         data.txToAddress || 'unknown', // 假的默认值，需要从 payment header 解析
         data.txAmount ? data.txAmount.toString() : '0', // 假的默认值 0，需要从 payment header 解析实际金额（USDC 的最小单位）

@@ -9,7 +9,9 @@ import dynamic from 'next/dynamic';
 const WalletButton = dynamic(
   () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
   { ssr: false }
-); interface ResourcePreview {
+);
+
+interface ResourcePreview {
   id: string;
   creator: string;
   contentType: string;
@@ -80,7 +82,9 @@ export default function ResourcePage() {
         wallet: wallet as any,
         network: 'solana', // or 'solana-devnet' for testing
         rpcUrl: rpcUrl, // Use the same RPC endpoint as the wallet connection
-      }); const response = await client.fetch(`http://localhost:4021/resources/${id}`);
+      });
+
+      const response = await client.fetch(`http://localhost:4021/resources/${id}`);
 
       if (!response.ok) {
         throw new Error('Payment failed');
@@ -99,7 +103,7 @@ export default function ResourcePage() {
   return (
     <div className="container">
       <header>
-        <h1>X402X - Decentralized Content Marketplace</h1>
+        <h1>Subless Network</h1>
         <WalletButton />
       </header>
 
@@ -112,7 +116,7 @@ export default function ResourcePage() {
 
         {preview && (
           <div className="preview-card">
-            <h2>Content Preview</h2>
+            <h2>Preview</h2>
             <div className="preview-details">
               <div className="detail-row">
                 <span className="label">Resource ID:</span>
@@ -129,14 +133,6 @@ export default function ResourcePage() {
               <div className="detail-row">
                 <span className="label">Price:</span>
                 <span className="value price">${preview.price.usd} {preview.price.currency}</span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Chain:</span>
-                <span className="value">{preview.chain}</span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Status:</span>
-                <span className={`badge badge-${preview.status}`}>{preview.status}</span>
               </div>
               {preview.tweetId && (
                 <div className="detail-row">
@@ -173,7 +169,7 @@ export default function ResourcePage() {
 
         {content && (
           <div className="content-card">
-            <h2>✅ Content Unlocked!</h2>
+            <h2>Unlocked</h2>
             <div className="content-box">
               <pre>{content.content}</pre>
             </div>
@@ -185,108 +181,147 @@ export default function ResourcePage() {
         )}
       </main>
 
+      <style jsx global>{`
+        /* Wallet Button Custom Styles */
+        .wallet-adapter-button {
+          background: var(--color-primary) !important;
+          color: var(--color-text) !important;
+          border: 1px solid var(--color-text) !important;
+          border-radius: var(--radius-sm) !important;
+          font-family: var(--font-heading) !important;
+          font-size: 18px !important;
+          padding: 12px 24px !important;
+          font-weight: 600 !important;
+          transition: all 0.2s ease !important;
+        }
+
+        .wallet-adapter-button:not([disabled]):hover {
+          background: var(--color-text) !important;
+          color: var(--color-primary) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px var(--color-shadow);
+        }
+
+        .wallet-adapter-button[disabled] {
+          opacity: 0.6 !important;
+          cursor: not-allowed !important;
+        }
+
+        /* Wallet Icon */
+        .wallet-adapter-button-start-icon {
+          margin-right: 8px !important;
+        }
+
+        /* Dropdown Menu */
+        .wallet-adapter-dropdown {
+          background: var(--color-primary) !important;
+          border: 1px solid var(--color-text) !important;
+          border-radius: var(--radius-sm) !important;
+        }
+
+        .wallet-adapter-dropdown-list {
+          background: var(--color-primary) !important;
+        }
+
+        .wallet-adapter-dropdown-list-item {
+          color: var(--color-text) !important;
+          font-family: var(--font-body) !important;
+        }
+
+        .wallet-adapter-dropdown-list-item:hover {
+          background: var(--color-primary) !important;
+        }
+
+        /* Modal */
+        .wallet-adapter-modal-wrapper {
+          background: var(--color-primary) !important;
+        }
+
+        .wallet-adapter-modal {
+          background: var(--color-primary) !important;
+          border: 1px solid var(--color-text) !important;
+          border-radius: var(--radius-sm) !important;
+        }
+
+        .wallet-adapter-modal-title {
+          color: var(--color-text) !important;
+          font-family: var(--font-heading) !important;
+          font-size: 24px !important;
+        }
+
+        .wallet-adapter-modal-list .wallet-adapter-button {
+          border: 1px solid var(--color-border) !important;
+        }
+
+        .wallet-adapter-modal-list .wallet-adapter-button:hover {
+          background: var(--color-text) !important;
+        }
+      `}</style>
+
       <style jsx>{`
         .container {
           max-width: 800px;
           margin: 0 auto;
           padding: 20px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-
         header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 40px;
           padding-bottom: 20px;
-          border-bottom: 2px solid #eee;
         }
-
         h1 {
           font-size: 24px;
           margin: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
         }
-
         h2 {
           margin-top: 0;
-          color: #333;
         }
-
         .error-box {
-          background: #fee;
-          border: 1px solid #fcc;
-          border-radius: 8px;
+          background: var(--color-primary);
+          border: 1px solid var(--color-border);
+          border-radius: 1px;
           padding: 16px;
           margin-bottom: 20px;
-          color: #c00;
         }
 
         .preview-card, .content-card {
-          background: white;
-          border-radius: 12px;
+          border-radius: 1px;
           padding: 30px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           margin-bottom: 20px;
         }
-
         .preview-details {
           margin: 20px 0;
         }
-
         .detail-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 12px 0;
-          border-bottom: 1px solid #f0f0f0;
+          border-bottom: 1px solid var(--color-border);
         }
-
         .detail-row:last-child {
           border-bottom: none;
         }
-
         .label {
           font-weight: 600;
-          color: #666;
+          color: var(--color-text);
         }
-
         .value {
-          color: #333;
+          color: var(--color-text);
         }
-
         .value.price {
           font-size: 20px;
           font-weight: bold;
-          color: #667eea;
+          color: var(--color-text);
         }
-
-        .badge {
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-        }
-
-        .badge-published {
-          background: #d4edda;
-          color: #155724;
-        }
-
-        .badge-draft {
-          background: #fff3cd;
-          color: #856404;
-        }
-
         .link {
-          color: #667eea;
+          color: var(--color-text);
           text-decoration: none;
           font-weight: 500;
         }
-
         .link:hover {
           text-decoration: underline;
         }
@@ -294,54 +329,49 @@ export default function ResourcePage() {
         .purchase-button {
           width: 100%;
           padding: 16px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
+          background: var(--color-primary);
+          color: var(--color-text);
           border: none;
-          border-radius: 8px;
+          border-radius: 1px;
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
           margin-top: 20px;
           transition: transform 0.2s, box-shadow 0.2s;
         }
-
         .purchase-button:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+          box-shadow: 0 4px 12px var(--color-primary);
         }
-
         .purchase-button:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
 
         .content-box {
-          background: #f8f9fa;
-          border-radius: 8px;
+          background: var(--color-primary);
+          border-radius: 1px;
+          border: 1px solid var(--color-border);
           padding: 20px;
           margin: 20px 0;
           max-height: 500px;
           overflow-y: auto;
         }
-
         .content-box pre {
           margin: 0;
           white-space: pre-wrap;
           word-wrap: break-word;
-          font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
           font-size: 14px;
           line-height: 1.6;
-          color: #333;
+          color: var(--color-text);
         }
-
         .metadata {
           margin-top: 20px;
           padding-top: 20px;
-          border-top: 1px solid #eee;
-          color: #666;
+          border-top: 1px solid var(--color-border);
+          color: var(--color-text);
           font-size: 14px;
         }
-
         .metadata p {
           margin: 8px 0;
         }
