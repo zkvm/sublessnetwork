@@ -59,6 +59,12 @@ export const db = {
     pricePaidCents: number;
     currency: string;
     chain: string;
+    txHash?: string;
+    txFromAddress?: string;
+    txToAddress?: string;
+    txAmount?: bigint;
+    txTimestamp?: Date;
+    txBlockNumber?: bigint;
   }) {
     const result = await pool.query(
       `INSERT INTO purchases (
@@ -66,14 +72,26 @@ export const db = {
         price_paid_cents,
         currency,
         chain,
+        tx_hash,
+        tx_from_address,
+        tx_to_address,
+        tx_amount,
+        tx_timestamp,
+        tx_block_number,
         status
-      ) VALUES ($1, $2, $3, $4, $5)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id`,
       [
         data.resourceId,
         data.pricePaidCents,
         data.currency,
         data.chain,
+        data.txHash || 'pending_verification', // 假的默认值，等待从 facilitator 获取实际 tx hash
+        data.txFromAddress || 'unknown', // 假的默认值，需要从 payment header 解析
+        data.txToAddress || 'unknown', // 假的默认值，需要从 payment header 解析
+        data.txAmount ? data.txAmount.toString() : '0', // 假的默认值 0，需要从 payment header 解析实际金额（USDC 的最小单位）
+        data.txTimestamp || new Date(), // 假的默认值为当前时间，需要从链上获取实际交易时间
+        data.txBlockNumber ? data.txBlockNumber.toString() : 1, // 假的默认值 1，需要从链上获取实际区块号
         'pending', // status
       ]
     );

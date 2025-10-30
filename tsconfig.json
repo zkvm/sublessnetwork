@@ -19,10 +19,21 @@
     "forceConsistentCasingInFileNames": true,
     "types": [
       "node"
+    ],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
     ]
   },
   "include": [
-    "payment/**/*"
+    "payment/**/*",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

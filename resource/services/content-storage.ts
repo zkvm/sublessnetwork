@@ -12,26 +12,30 @@ const pool = new Pool({
 
 /**
  * Encrypt content using AES-256-GCM
+ * Auth tag is appended to ciphertext (last 16 bytes in base64)
  */
 export function encryptContent(plaintext: string): {
     ciphertext: string;
     iv: string;
-    authTag?: string;
 } {
     const key = Buffer.from(config.encryptionKey!, 'hex');
     const iv = crypto.randomBytes(12); // 96-bit IV for GCM
 
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
 
-    let encrypted = cipher.update(plaintext, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
+    const encrypted = Buffer.concat([
+        cipher.update(plaintext, 'utf8'),
+        cipher.final()
+    ]);
 
     const authTag = cipher.getAuthTag();
 
+    // Combine encrypted data + auth tag
+    const combined = Buffer.concat([encrypted, authTag]);
+
     return {
-        ciphertext: encrypted,
+        ciphertext: combined.toString('base64'),
         iv: iv.toString('hex'),
-        authTag: authTag.toString('hex'),
     };
 }
 
