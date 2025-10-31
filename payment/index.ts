@@ -27,7 +27,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Resource routes (x402 payment handling is done in the route handler)
-app.use('/resources', resourceRoutes);
+app.use('api/resources', resourceRoutes);
 
 // 404 handler
 app.use((req, res) => {

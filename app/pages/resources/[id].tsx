@@ -53,7 +53,7 @@ export default function ResourcePage() {
 
   const fetchPreview = async (resourceId: string) => {
     try {
-      const response = await fetch(`https://subless.network/resources/${resourceId}/preview`);
+      const response = await fetch(`https://subless.network/api/resources/${resourceId}/preview`);
       if (!response.ok) {
         throw new Error('Failed to fetch preview');
       }
@@ -84,7 +84,7 @@ export default function ResourcePage() {
         rpcUrl: rpcUrl, // Use the same RPC endpoint as the wallet connection
       });
 
-      const response = await client.fetch(`https://subless.network/resources/${id}`);
+      const response = await client.fetch(`https://subless.network/api/resources/${id}`);
 
       if (!response.ok) {
         throw new Error('Payment failed');
