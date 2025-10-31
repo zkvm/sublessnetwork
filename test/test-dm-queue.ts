@@ -35,18 +35,9 @@ async function testDmQueue() {
 
     // Simulate a DM from a creator
     const testMessage: DmReceivedMessage = {
-        userId: 'zkvm1',
-        username: 'wan fan',
-        content: `Premium Content: How to Build AI Agents with Message Queues
-
-This is a comprehensive guide on building scalable AI systems using message queues like BullMQ.
-
-Topics covered:
-- Queue architecture design
-- Consumer implementation
-- Error handling and retries
-- Monitoring and observability
-- Best practices for production
+        userId: 'sublesslab',
+        username: 'Subless Lab',
+        content: `Hello world! This is a test subless message.
 
 ...`,
         messageId: `dm_${Date.now()}_${Math.random().toString(36).substring(7)}`,

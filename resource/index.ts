@@ -1,6 +1,8 @@
 import { config, validateConfig } from './config.js';
 import { dmProcessor } from './consumers/dm-processor.js';
 import { mentionProcessor } from './consumers/mention-processor.js';
+import { TwitterClient } from './twitter/index.js';
+import { MentionPoller } from './x-publish/index.js';
 
 // Validate configuration
 try {
@@ -27,6 +29,40 @@ console.log('');
 console.log('👂 Workers listening for messages...');
 console.log('');
 
+// Initialize Twitter client and mention poller
+let twitterClient: TwitterClient | null = null;
+let mentionPoller: MentionPoller | null = null;
+try {
+    // Check if Twitter credentials are configured
+    const twitterConfig = process.env.TWITTER_API_KEY ? {
+        apiKey: process.env.TWITTER_API_KEY,
+        apiSecret: process.env.TWITTER_API_SECRET!,
+        accessToken: process.env.TWITTER_ACCESS_TOKEN!,
+        accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET!,
+        botUserId: process.env.TWITTER_BOT_USER_ID!,
+    } : null;
+
+    if (twitterConfig) {
+        // Initialize shared Twitter client
+        twitterClient = new TwitterClient(twitterConfig);
+        console.log('✅ Twitter client initialized');
+
+        // Initialize mention poller with injected client
+        mentionPoller = new MentionPoller(twitterClient);
+        await mentionPoller.start();
+        console.log('✅ Twitter mention poller started');
+    } else {
+        console.log('⚠️  Twitter credentials not configured, skipping Twitter integration');
+    }
+} catch (error) {
+    console.error('⚠️  Twitter integration failed to start:', error);
+    console.log('   (Continuing without Twitter features)');
+}
+console.log('');
+
+// Export twitterClient for use in consumers
+export { twitterClient };
+
 // Log worker status
 dmProcessor.on('ready', () => {
     console.log('✅ DM processor ready');
@@ -41,10 +77,17 @@ async function shutdown() {
     console.log('');
     console.log('👋 Shutting down gracefully...');
 
-    await Promise.all([
+    const closePromises = [
         dmProcessor.close(),
         mentionProcessor.close(),
-    ]);
+    ];
+
+    // Stop mention poller if running
+    if (mentionPoller) {
+        closePromises.push(mentionPoller.stop());
+    }
+
+    await Promise.all(closePromises);
 
     console.log('✅ All workers closed');
     process.exit(0);
