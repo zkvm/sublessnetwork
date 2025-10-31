@@ -37,7 +37,7 @@ async function testDmQueue() {
     const testMessage: DmReceivedMessage = {
         userId: 'sublesslab',
         username: 'Subless Lab',
-        content: `Hello world! This is a test subless message.
+        content: `Hello world! This is a test message from Subless Network team.
 
 ...`,
         messageId: `dm_${Date.now()}_${Math.random().toString(36).substring(7)}`,

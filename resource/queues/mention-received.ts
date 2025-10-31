@@ -10,7 +10,7 @@ const queueOptions: QueueOptions = {
         db: config.redis.db,
     },
     defaultJobOptions: {
-        attempts: 3,
+        attempts: 1,
         backoff: {
             type: 'exponential',
             delay: 2000,

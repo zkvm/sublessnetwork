@@ -104,11 +104,11 @@ export const mentionProcessor = new Worker<MentionReceivedMessage>(
  * Format the mention reply message
  */
 function formatMentionReply(paymentLink: string, price: string): string {
-    return `🔒 Content locked! Pay $${price} USDC on Solana to unlock:
+    return `🔒 Paywalled Content! Pay $${price} USDC (x402 payment) to access:
 
 ${paymentLink}
 
-Powered by x402 payment protocol ⚡️`;
+- Powered by Subless Network ⚡️`;
 }
 
 /**

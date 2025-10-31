@@ -1,6 +1,7 @@
 import { config, validateConfig } from './config.js';
 import { dmProcessor } from './consumers/dm-processor.js';
 import { mentionProcessor } from './consumers/mention-processor.js';
+import { mentionReplyWorker } from './consumers/mention-reply-worker.js';
 import { TwitterClient } from './twitter/index.js';
 import { MentionPoller } from './x-publish/index.js';
 
@@ -23,7 +24,7 @@ console.log('📋 Active Queues:');
 console.log(`   1️⃣  ${config.queues.dmReceived} (DM processing)`);
 console.log(`   2️⃣  ${config.queues.dmReply} (DM replies - not consumed)`);
 console.log(`   3️⃣  ${config.queues.mentionReceived} (Mention processing)`);
-console.log(`   4️⃣  ${config.queues.mentionReply} (Mention replies - not consumed)`);
+console.log(`   4️⃣  ${config.queues.mentionReply} (Mention reply worker)`);
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('');
 console.log('👂 Workers listening for messages...');
@@ -72,6 +73,10 @@ mentionProcessor.on('ready', () => {
     console.log('✅ Mention processor ready');
 });
 
+mentionReplyWorker.on('ready', () => {
+    console.log('✅ Mention reply worker ready');
+});
+
 // Handle shutdown
 async function shutdown() {
     console.log('');
@@ -80,6 +85,7 @@ async function shutdown() {
     const closePromises = [
         dmProcessor.close(),
         mentionProcessor.close(),
+        mentionReplyWorker.close(),
     ];
 
     // Stop mention poller if running
