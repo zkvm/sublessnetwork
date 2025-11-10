@@ -17,8 +17,19 @@ A general-purpose content monetization protocol built on top of x402 payments.
 
 - payment link：each resource comes with its own payment link. anyone who sees it can pay through x402 to unlock the content — unpublished resources can’t be purchased.
 
-## X-Publish
-will add details soon
+## x402X
+
+- Creators send their alpha content to the Subless Network X account via DM (note: the test version currently supports text only, and content submission is handled via a temporary script).
+
+- Subless server encrypts and stores the content, then returns a resource id (corresponding to the submitted content) and a proof to the creator. when the creator wants to publish, they’ll need to provide this proof for challenge.
+
+- Creator teases their alpha content on X by posting a tweet that includes the resource id and proof. the Subless Network bot automatically replies with an x402 payment link — anyone who sees the link can click to pay via x402 and unlock the content.
+
+Test cases:
+
+Creator posting content: https://x.com/sublesslab/status/1984293844901568914
+
+Subless Network bot replying with x402 payment link: https://x.com/sublessnetwork/status/1984294029601759329
 
 ## Subless Agent
 coming soon

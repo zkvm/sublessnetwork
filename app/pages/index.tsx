@@ -36,7 +36,7 @@ export default function Home() {
                 className="product-header"
                 onClick={() => toggleProduct('x-publish')}
               >
-                <h3>X Publish</h3>
+                <h3>x402X</h3>
                 <span className="toggle-icon">{expandedProduct === 'x-publish' ? '−' : '+'}</span>
               </button>
               {expandedProduct === 'x-publish' && (

@@ -41,3 +41,4 @@ temp/
 *.md
 !LICENSE.md
 !README-core.md
+!README-setup.md
