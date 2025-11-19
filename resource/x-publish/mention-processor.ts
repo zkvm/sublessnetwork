@@ -1,6 +1,6 @@
 import { Worker, Job } from 'bullmq';
 import { config } from '../config.js';
-import { mentionReplyQueue } from '../queues/mention-reply.js';
+import { mentionReplyQueue } from './queues/mention-reply.js';
 import { verifyProofToken, markProofUsed } from '../services/proof-verifier.js';
 import type { MentionReceivedMessage, MentionReplyMessage } from '../types/messages.js';
 
@@ -116,32 +116,27 @@ ${paymentLink}
  */
 function formatErrorReply(error: string): string {
     const errorMessages: Record<string, string> = {
-        'Resource not found': '❌ Invalid resource ID. Please check and try again.',
-        'Proof already used': '❌ This content is already published.',
-        'Invalid proof token': '❌ Invalid proof. Please check your proof token.',
+        'Resource not found': 'Invalid resource ID. Please check and try again.',
+        'Proof already used': 'This content is already published.',
+        'Invalid proof token': 'Invalid proof. Please check your proof token.',
     };
 
-    return errorMessages[error] || `❌ Error: ${error}`;
+    return errorMessages[error] || `Error: ${error}`;
 }
 
 // Event handlers
+mentionProcessor.on('ready', () => {
+    console.log('✅ Mention processor ready');
+});
+
 mentionProcessor.on('completed', (job) => {
-    console.log(`✅ Job ${job.id} completed`);
+    console.log(`✅ Mention processor job ${job.id} completed`);
 });
 
 mentionProcessor.on('failed', (job, err) => {
-    console.error(`❌ Job ${job?.id} failed:`, err.message);
+    console.error(`❌ Mention processor job ${job?.id} failed:`, err.message);
 });
 
 mentionProcessor.on('error', (err) => {
-    console.error('❌ Worker error:', err);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-    await mentionProcessor.close();
-});
-
-process.on('SIGINT', async () => {
-    await mentionProcessor.close();
+    console.error('❌ Mention processor error:', err);
 });

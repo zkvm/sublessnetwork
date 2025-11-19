@@ -1,7 +1,7 @@
 import { TweetV2, UserV2 } from 'twitter-api-v2';
-import { Queue } from 'bullmq';
 import { config } from './config.js';
 import { MentionTracker } from './mention-tracker.js';
+import { mentionReceivedQueue } from './queues/mention-received.js';
 import type { TwitterClient } from '../twitter/index.js';
 import type { MentionReceivedMessage } from '../types/messages.js';
 
@@ -12,24 +12,12 @@ import type { MentionReceivedMessage } from '../types/messages.js';
  */
 export class MentionPoller {
     private twitterClient: TwitterClient;
-    private queue: Queue<MentionReceivedMessage>;
     private tracker: MentionTracker;
     private isRunning: boolean = false;
     private pollTimer?: NodeJS.Timeout;
 
     constructor(twitterClient: TwitterClient) {
         this.twitterClient = twitterClient;
-
-        // Initialize mention_received queue
-        this.queue = new Queue('mention_received', {
-            connection: {
-                host: config.redis.host,
-                port: config.redis.port,
-                password: config.redis.password,
-                db: config.redis.db,
-            },
-        });
-
         this.tracker = new MentionTracker();
     }
 
@@ -136,7 +124,7 @@ export class MentionPoller {
                 };
 
                 // Push to mention_received queue
-                await this.queue.add('mention-received', mentionData);
+                await mentionReceivedQueue.add('mention-received', mentionData);
 
                 // Mark as processed
                 await this.tracker.markAsProcessed(tweet.id);
@@ -208,7 +196,6 @@ export class MentionPoller {
 
         this.isRunning = false;
 
-        await this.queue.close();
         await this.tracker.close();
 
         console.log('✅ Mention poller stopped');

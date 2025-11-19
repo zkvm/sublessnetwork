@@ -1,9 +1,11 @@
+import express from 'express';
 import { config, validateConfig } from './config.js';
-import { dmProcessor } from './consumers/dm-processor.js';
-import { mentionProcessor } from './consumers/mention-processor.js';
-import { mentionReplyWorker } from './consumers/mention-reply-worker.js';
 import { TwitterClient } from './twitter/index.js';
-import { MentionPoller } from './x-publish/index.js';
+import { XPublishService } from './x-publish/service.js';
+import { createResource } from './api/create-resource.js';
+
+const app = express();
+app.use(express.json());
 
 // Validate configuration
 try {
@@ -15,24 +17,62 @@ try {
 }
 
 console.log('');
-console.log('🚀 X402X Resource Queue Workers Started');
+console.log('🚀 X402X Resource Service Started');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log(`📡 Redis:        ${config.redis.host}:${config.redis.port}`);
 console.log(`📊 Database:     ${config.databaseUrl.split('@')[1] || 'configured'}`);
 console.log('');
-console.log('📋 Active Queues:');
-console.log(`   1️⃣  ${config.queues.dmReceived} (DM processing)`);
-console.log(`   2️⃣  ${config.queues.dmReply} (DM replies - not consumed)`);
-console.log(`   3️⃣  ${config.queues.mentionReceived} (Mention processing)`);
-console.log(`   4️⃣  ${config.queues.mentionReply} (Mention reply worker)`);
+console.log('📋 Services:');
+console.log('   🐦 X-Publish (Twitter mention polling and processing)');
+console.log('   🔗 Resource API (Direct resource creation)');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('');
-console.log('👂 Workers listening for messages...');
-console.log('');
 
-// Initialize Twitter client and mention poller
-let twitterClient: TwitterClient | null = null;
-let mentionPoller: MentionPoller | null = null;
+// API Routes
+app.post('/api/resources', async (req, res) => {
+    try {
+        const { userId, username, content, messageId, sourcePlatform, contentType, priceUsdCents } = req.body;
+
+        // Validate required fields
+        if (!userId || !username || !content) {
+            return res.status(400).json({
+                error: 'Missing required fields',
+                required: ['userId', 'username', 'content']
+            });
+        }
+
+        // Create resource
+        const result = await createResource({
+            userId,
+            username,
+            content,
+            messageId,
+            sourcePlatform,
+            contentType,
+            priceUsdCents
+        });
+
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('API Error:', error);
+        res.status(500).json({
+            error: 'Failed to create resource',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+// Start API server
+const API_PORT = process.env.RESOURCE_API_PORT || 3001;
+app.listen(API_PORT, () => {
+    console.log(`🌐 API Server listening on port ${API_PORT}`);
+    console.log(`   POST /api/resources - Create resource`);
+    console.log(`   GET  /health - Health check`);
+    console.log('');
+});
+
+// Initialize Twitter client and X-Publish service
+let xPublishService: XPublishService | null = null;
 try {
     // Check if Twitter credentials are configured
     const twitterConfig = process.env.TWITTER_API_KEY ? {
@@ -45,57 +85,36 @@ try {
 
     if (twitterConfig) {
         // Initialize shared Twitter client
-        twitterClient = new TwitterClient(twitterConfig);
+        const twitterClient = new TwitterClient(twitterConfig);
         console.log('✅ Twitter client initialized');
 
-        // Initialize mention poller with injected client
-        mentionPoller = new MentionPoller(twitterClient);
-        await mentionPoller.start();
-        console.log('✅ Twitter mention poller started');
+        // Initialize X-Publish service with Twitter client
+        xPublishService = new XPublishService(twitterClient);
+        await xPublishService.start();
     } else {
-        console.log('⚠️  Twitter credentials not configured, skipping Twitter integration');
+        console.log('⚠️  Twitter credentials not configured, skipping X-Publish service');
     }
 } catch (error) {
-    console.error('⚠️  Twitter integration failed to start:', error);
-    console.log('   (Continuing without Twitter features)');
+    console.error('⚠️  X-Publish service failed to start:', error);
+    console.log('   (Continuing without X-Publish features)');
 }
 console.log('');
-
-// Export twitterClient for use in consumers
-export { twitterClient };
-
-// Log worker status
-dmProcessor.on('ready', () => {
-    console.log('✅ DM processor ready');
-});
-
-mentionProcessor.on('ready', () => {
-    console.log('✅ Mention processor ready');
-});
-
-mentionReplyWorker.on('ready', () => {
-    console.log('✅ Mention reply worker ready');
-});
 
 // Handle shutdown
 async function shutdown() {
     console.log('');
     console.log('👋 Shutting down gracefully...');
 
-    const closePromises = [
-        dmProcessor.close(),
-        mentionProcessor.close(),
-        mentionReplyWorker.close(),
-    ];
+    const closePromises = [];
 
-    // Stop mention poller if running
-    if (mentionPoller) {
-        closePromises.push(mentionPoller.stop());
+    // Stop X-Publish service if running
+    if (xPublishService) {
+        closePromises.push(xPublishService.stop());
     }
 
     await Promise.all(closePromises);
 
-    console.log('✅ All workers closed');
+    console.log('✅ All services and API server closed');
     process.exit(0);
 }
 

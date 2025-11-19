@@ -1,6 +1,6 @@
 import { Queue, QueueOptions } from 'bullmq';
-import { config } from '../config.js';
-import type { MentionReceivedMessage } from '../types/messages.js';
+import { config } from '../../config.js';
+import type { MentionReceivedMessage } from '../../types/messages.js';
 
 const queueOptions: QueueOptions = {
     connection: {
@@ -29,12 +29,3 @@ export const mentionReceivedQueue = new Queue<MentionReceivedMessage>(
     config.queues.mentionReceived,
     queueOptions
 );
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-    await mentionReceivedQueue.close();
-});
-
-process.on('SIGINT', async () => {
-    await mentionReceivedQueue.close();
-});

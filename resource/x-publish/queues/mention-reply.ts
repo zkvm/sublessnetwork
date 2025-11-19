@@ -1,6 +1,6 @@
 import { Queue, QueueOptions } from 'bullmq';
-import { config } from '../config.js';
-import type { DmReplyMessage } from '../types/messages.js';
+import { config } from '../../config.js';
+import type { MentionReplyMessage } from '../../types/messages.js';
 
 const queueOptions: QueueOptions = {
     connection: {
@@ -10,7 +10,7 @@ const queueOptions: QueueOptions = {
         db: config.redis.db,
     },
     defaultJobOptions: {
-        attempts: 5,
+        attempts: 1,
         backoff: {
             type: 'exponential',
             delay: 3000,
@@ -25,16 +25,7 @@ const queueOptions: QueueOptions = {
     },
 };
 
-export const dmReplyQueue = new Queue<DmReplyMessage>(
-    config.queues.dmReply,
+export const mentionReplyQueue = new Queue<MentionReplyMessage>(
+    config.queues.mentionReply,
     queueOptions
 );
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-    await dmReplyQueue.close();
-});
-
-process.on('SIGINT', async () => {
-    await dmReplyQueue.close();
-});
