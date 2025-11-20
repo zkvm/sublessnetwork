@@ -1,7 +1,7 @@
 /**
  * X-Publish Configuration
  * 
- * Note: Twitter credentials are now managed by the main resource service.
+ * Note: Twitter credentials are now managed by the main core service.
  * This config only handles x-publish specific settings (polling, redis).
  */
 

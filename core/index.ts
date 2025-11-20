@@ -1,11 +1,23 @@
 import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { config, validateConfig } from './config.js';
 import { TwitterClient } from './twitter/index.js';
 import { XPublishService } from './x-publish/service.js';
-import { createResource } from './api/create-resource.js';
+import apiRoutes from './api/routes.js';
 
 const app = express();
+
+// Middleware
 app.use(express.json());
+app.use(cookieParser());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true // Allow cookies to be sent
+}));
+
+// Mount API routes
+app.use('/api', apiRoutes);
 
 // Validate configuration
 try {
@@ -17,57 +29,26 @@ try {
 }
 
 console.log('');
-console.log('🚀 X402X Resource Service Started');
+console.log('🚀 X402X Core Service Started');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log(`📡 Redis:        ${config.redis.host}:${config.redis.port}`);
 console.log(`📊 Database:     ${config.databaseUrl.split('@')[1] || 'configured'}`);
 console.log('');
 console.log('📋 Services:');
 console.log('   🐦 X-Publish (Twitter mention polling and processing)');
-console.log('   🔗 Resource API (Direct resource creation)');
+console.log('   🔗 Core API (Resource creation & authentication)');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('');
 
-// API Routes
-app.post('/api/resources', async (req, res) => {
-    try {
-        const { userId, username, content, messageId, sourcePlatform, contentType, priceUsdCents } = req.body;
-
-        // Validate required fields
-        if (!userId || !username || !content) {
-            return res.status(400).json({
-                error: 'Missing required fields',
-                required: ['userId', 'username', 'content']
-            });
-        }
-
-        // Create resource
-        const result = await createResource({
-            userId,
-            username,
-            content,
-            messageId,
-            sourcePlatform,
-            contentType,
-            priceUsdCents
-        });
-
-        res.status(201).json(result);
-    } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({
-            error: 'Failed to create resource',
-            message: error instanceof Error ? error.message : 'Unknown error'
-        });
-    }
-});
-
 // Start API server
-const API_PORT = process.env.RESOURCE_API_PORT || 3001;
+const API_PORT = process.env.CORE_API_PORT || 3001;
 app.listen(API_PORT, () => {
     console.log(`🌐 API Server listening on port ${API_PORT}`);
-    console.log(`   POST /api/resources - Create resource`);
-    console.log(`   GET  /health - Health check`);
+    console.log(`   POST /api/auth/init - Initialize OAuth`);
+    console.log(`   GET  /api/auth/callback - OAuth callback`);
+    console.log(`   POST /api/auth/logout - Logout`);
+    console.log(`   POST /api/resources - Create resource (authenticated)`);
+    console.log(`   GET  /api/health - Health check`);
     console.log('');
 });
 

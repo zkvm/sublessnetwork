@@ -224,7 +224,7 @@ npm run dev
 npm run dev:resource
 
 # Or manually:
-# tsx watch resource/index.ts
+# tsx watch core/index.ts
 ```
 
 **What it does:**
